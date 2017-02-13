@@ -12,27 +12,37 @@ namespace NumericalIntegrationGUI {
         }
 
         private void Calculate_Click (object sender, RoutedEventArgs e) {
-            StringBuilder SB = new StringBuilder();
-            SB.Clear();
 
-            double Answer, Lower = Double.Parse(LowerLimit.Text), Upper = Double.Parse(UpperLimit.Text), N = Double.Parse(NumberOfRectangles.Text);
+            try {
 
-            if (RuleSelectionBox.SelectedIndex.Equals(0)) {
-                Answer = NumericalIntegration.Midpoint(Lower, Upper, N);
-                SB.AppendFormat("{0} | {1}% Error", Math.Round(Answer, 10), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 3));
-                ResultText.Text = SB.ToString();
-            } else if (RuleSelectionBox.SelectedIndex.Equals(1)) {
-                Answer = NumericalIntegration.Trapezoid(Lower, Upper, N);
-                SB.AppendFormat("{0} | {1}% Error", Math.Round(Answer, 10), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 3));
-                ResultText.Text = SB.ToString();
-            } else if (RuleSelectionBox.SelectedIndex.Equals(2)) {
-                Answer = NumericalIntegration.Simpson(Lower, Upper, N);
-                SB.AppendFormat("{0} | {1}% Error", Math.Round(Answer, 10), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 3));
-                ResultText.Text = SB.ToString();
-            } else if (RuleSelectionBox.SelectedIndex.Equals(3)){
-                ResultText.Text = NumericalIntegration.IntegralF(Lower, Upper).ToString();
-            } else {
-                ResultText.Text = "Please select a rule";
+                double Answer, Lower = Double.Parse(LowerLimit.Text), Upper = Double.Parse(UpperLimit.Text), N = Double.Parse(NumberOfRectangles.Text);
+
+                if (Lower > Upper) throw new InvalidOperationException("Lower bound > Upper Bound");
+
+                switch (RuleSelectionBox.SelectedIndex) {
+
+                    case 0:
+                        Answer = NumericalIntegration.Midpoint(Lower, Upper, N);
+                        ResultText.Text = String.Format("{0} | {1}% Error", Math.Round(Answer, 8), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 4));
+                        break;
+                    case 1:
+                        Answer = NumericalIntegration.Trapezoid(Lower, Upper, N);
+                        ResultText.Text = String.Format("{0} | {1}% Error", Math.Round(Answer, 8), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 4));
+                        break;
+                    case 2:
+                        Answer = NumericalIntegration.Simpson(Lower, Upper, N);
+                        ResultText.Text = String.Format("{0} | {1}% Error", Math.Round(Answer, 8), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 4));
+                        break;
+                    case 3:
+                        ResultText.Text = NumericalIntegration.IntegralF(Lower, Upper).ToString();
+                        break;
+                    default:
+                        ResultText.Text = "Error";
+                        break;
+                }
+
+            } catch (Exception E) {
+                ResultText.Text = E.Message.Equals("Lower bound > Upper Bound") ? E.Message : "Error: Bad Input";
             }
         }
     }
@@ -48,7 +58,7 @@ namespace NumericalIntegrationGUI {
         }
 
         public static double PercentError (double Experimental, double Actual) {
-            return ((Experimental - Actual) / Actual) * 100;
+            return (Math.Abs(Experimental - Actual) / Actual) * 100;
         }
 
         public static double Midpoint (double LowerBound, double UpperBound, double N) {
