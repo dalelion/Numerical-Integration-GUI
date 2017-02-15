@@ -15,7 +15,7 @@ namespace NumericalIntegrationGUI {
 
             try {
 
-                double Answer, Lower = Double.Parse(LowerLimit.Text), Upper = Double.Parse(UpperLimit.Text), N = Double.Parse(NumberOfRectangles.Text);
+                Decimal Answer, Lower = Decimal.Parse(LowerLimit.Text), Upper = Decimal.Parse(UpperLimit.Text), N = Decimal.Parse(NumberOfRectangles.Text);
 
                 if (Lower > Upper) throw new InvalidOperationException("Lower bound > Upper Bound");
 
@@ -34,53 +34,65 @@ namespace NumericalIntegrationGUI {
                         ResultText.Text = String.Format("{0} | {1}% Error", Math.Round(Answer, 8), Math.Round(NumericalIntegration.PercentError(Answer, NumericalIntegration.IntegralF(Lower, Upper)), 4));
                         break;
                     case 3:
-                        ResultText.Text = NumericalIntegration.IntegralF(Lower, Upper).ToString();
+                        ResultText.Text = Math.Round(NumericalIntegration.IntegralF(Lower, Upper), 24).ToString();
                         break;
                     default:
-                        ResultText.Text = "Error";
-                        break;
+                        throw new Exception();
                 }
 
             } catch (Exception E) {
                 ResultText.Text = E.Message.Equals("Lower bound > Upper Bound") ? E.Message : "Error: Bad Input";
             }
         }
+
     }
 
     class NumericalIntegration {
 
-        private static double F (double X) {
-            return 8 * Math.Pow(X, 2) - Math.Pow(X, 5);
+        private static Decimal Power (Decimal Base, int P) {
+
+            if (P.Equals(0)) return 1;
+            if (Base.Equals(0)) return 0;
+
+            if (P % 2 == 0) {
+                return Power(Base * Base, P / 2);
+            } else {
+                return Base * Power(Base * Base, P / 2);
+            }
         }
 
-        public static double IntegralF (double LowerBound, double UpperBound) {
-            return ((8.0 / 3.0) * Math.Pow(UpperBound, 3.0) - (Math.Pow(UpperBound, 6.0) / 6.0)) - ((8.0 / 3.0) * Math.Pow(LowerBound, 3.0) - (Math.Pow(LowerBound, 6.0) / 6.0));
+        private static Decimal F (Decimal X) {
+            return 8 * Power(X, 2) - Power(X, 5);
         }
 
-        public static double PercentError (double Experimental, double Actual) {
+        public static Decimal IntegralF (Decimal LowerBound, Decimal UpperBound) {
+            return (((Decimal)8 / 3) * Power(UpperBound, 3) - (Power(UpperBound, 6) / 6)) - (((Decimal)8 / 3) * Power(LowerBound, 3) - (Power(LowerBound, 6) / 6));
+        }
+
+        public static Decimal PercentError (Decimal Experimental, Decimal Actual) {
             return (Math.Abs(Experimental - Actual) / Actual) * 100;
         }
 
-        public static double Midpoint (double LowerBound, double UpperBound, double N) {
-            double DeltaX = (UpperBound - LowerBound) / N, LastX = LowerBound, Sum = 0;
+        public static Decimal Midpoint (Decimal LowerBound, Decimal UpperBound, Decimal N) {
+            Decimal DeltaX = (UpperBound - LowerBound) / N, LastX = LowerBound, Sum = 0;
 
-            for (double i = LowerBound; i <= UpperBound; i += DeltaX) {
+            for (Decimal i = LowerBound; i <= UpperBound; i += DeltaX) {
                 Sum += F((LastX + i) / 2);
                 LastX = i;
             }
             return (DeltaX) * Sum;
         }
 
-        public static double Trapezoid (double LowerBound, double UpperBound, double N) {
-            double DeltaX = (UpperBound - LowerBound) / N, Sum = 0;
+        public static Decimal Trapezoid (Decimal LowerBound, Decimal UpperBound, Decimal N) {
+            Decimal DeltaX = (UpperBound - LowerBound) / N, Sum = 0;
 
-            for (double i = LowerBound; i <= UpperBound; i += DeltaX) {
+            for (Decimal i = LowerBound; i <= UpperBound; i += DeltaX) {
                 Sum += 2 * F(i);
             }
             return (DeltaX / 2) * Sum;
         }
 
-        public static double Simpson (double LowerBound, double UpperBound, double N) {
+        public static Decimal Simpson (Decimal LowerBound, Decimal UpperBound, Decimal N) {
             return (2 * Midpoint(LowerBound, UpperBound, N) + Trapezoid(LowerBound, UpperBound, N)) / 3;
         }
 
