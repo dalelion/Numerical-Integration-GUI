@@ -1,22 +1,27 @@
 ﻿using System;
 using System.Text;
 using System.Windows;
+using System.Xml;
+using System.Linq.Expressions;
+using System.Linq.Dynamic;
+using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace NumericalIntegrationGUI {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+
     public partial class MainWindow : Window {
+
         public MainWindow () {
             InitializeComponent();
         }
 
-        private void Calculate_Click (object sender, RoutedEventArgs e) {
+        //Can configure methods here
+        public Func<Decimal, Decimal, Decimal> If = (L, U) => (((Decimal)8 / 3) * Integral.Power(U, 3) - (Integral.Power(U, 6) / 6)) - (((Decimal)8 / 3) * Integral.Power(L, 3) - (Integral.Power(L, 6) / 6));
+        public Func<Decimal, Decimal> f = (X) => 8 * Integral.Power(X, 2) - Integral.Power(X, 5);
 
-            //TODO: Make methods able to parse strings to code (System.Linq.Expressions)
-            //Can configure methods here
-            Func<Decimal, Decimal> f = (X) => 8 * Integral.Power(X, 2) - Integral.Power(X, 5);
-            Func<Decimal, Decimal, Decimal> If = (L, U) => (((Decimal)8 / 3) * Integral.Power(U, 3) - (Integral.Power(U, 6) / 6)) - (((Decimal)8 / 3) * Integral.Power(L, 3) - (Integral.Power(L, 6) / 6));
+        public List<String[]> CalcList = new List<String[]>();
+
+        private void Calculate_Click (object sender, RoutedEventArgs e) {
 
             Integral integral = null;
 
@@ -38,16 +43,58 @@ namespace NumericalIntegrationGUI {
                         integral = new Simpson(f, Lower, Upper, N);
                         break;
                     case 3:
-                        ResultText.Text = Math.Round(If(Lower, Upper), 20).ToString();
-                        return;
+                        break;
                     default:
                         throw new Exception();
                 }
 
-                ResultText.Text = integral.ToString();
+                ResultText.Text = RuleSelectionBox.SelectedIndex == 3 ? Math.Round(If(Lower, Upper), 20).ToString() : integral.ToString();
+
+                CalcList.Add(RuleSelectionBox.SelectedIndex == 3 ? new String[] { "Integral", If(Lower, Upper).ToString() } : integral.ToXML());
 
             } catch (Exception E) {
                 ResultText.Text = E.Message.Equals("Lower bound > Upper Bound") ? E.Message : "Error: Bad Input";
+            }
+        }
+
+        private void Convert_Button_Click (object sender, RoutedEventArgs e) {
+
+            //TODO: Make methods able to parse strings to code (System.Linq.Expressions)
+            String Function = InputFunction.Text;
+
+        }
+
+        private void OnClose (object sender, CancelEventArgs e) {
+
+            XmlWriterSettings Settings = new XmlWriterSettings();
+            Settings.Indent = true;
+            Settings.NewLineOnAttributes = true;
+
+            using (XmlWriter XW = XmlWriter.Create("RawData.xml", Settings)) {
+
+                XW.WriteStartDocument();
+                XW.WriteStartElement("RawData");
+
+                String[] Terms = { "Lower", "Upper", "Number", "Result", "Error" };
+
+                foreach (String[] Arr in CalcList) {
+
+                    XW.WriteStartElement(Arr[0]);
+                    if (Arr[0].Equals("Integral")) {
+                        XW.WriteAttributeString("Result", Arr[1]);
+                        XW.WriteEndElement();
+
+                    } else {
+                        for (int i = 1; i < 6; ++i) {
+                            XW.WriteAttributeString(Terms[i - 1], Arr[i]);
+                        }
+                        XW.WriteEndElement();
+                    }
+                }
+                XW.WriteEndElement();
+                XW.WriteEndDocument();
+                XW.Flush();
+                XW.Close();
             }
         }
 
@@ -62,8 +109,9 @@ namespace NumericalIntegrationGUI {
         protected Decimal Actual;
         protected Decimal Error;
         protected Func<Decimal, Decimal> FofX;
-        //TODO implement IntegralF
+        //TODO: implement IntegralF
         protected Func<Decimal, Decimal> IntF;
+        protected String Rule;
 
         public Integral (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) {
             this.FofX = X;
@@ -78,6 +126,10 @@ namespace NumericalIntegrationGUI {
         public Integral (Integral I) : this(I.FofX, I.LowerLimit, I.UpperLimit, I.Number) { }
 
         abstract protected Decimal Calculate ();
+
+        public String[] ToXML () {
+            return new string[] { Rule, LowerLimit.ToString(), UpperLimit.ToString(), Number.ToString(), Result.ToString(), Error.ToString() };
+        }
 
         public override string ToString () {
             return String.Format("{0} | {1}% Error", Math.Round(Result, 8), Math.Round(Error, 4));
@@ -113,9 +165,9 @@ namespace NumericalIntegrationGUI {
 
     public class Midpoint : Integral {
 
-        public Midpoint (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { }
+        public Midpoint (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { Rule = "Midpoint"; }
 
-        public Midpoint (Integral I) : base(I) { }
+        public Midpoint (Integral I) : base(I) { Rule = "Midpoint"; }
 
         protected override Decimal Calculate () {
             Decimal DeltaX = (UpperLimit - LowerLimit) / Number, LastX = LowerLimit, Sum = 0;
@@ -131,9 +183,9 @@ namespace NumericalIntegrationGUI {
 
     public class Trapezoid : Integral {
 
-        public Trapezoid (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { }
+        public Trapezoid (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { Rule = "Trapezoid"; }
 
-        public Trapezoid (Integral I) : base(I) { }
+        public Trapezoid (Integral I) : base(I) { Rule = "Trapezoid"; }
 
         protected override Decimal Calculate () {
             Decimal DeltaX = (UpperLimit - LowerLimit) / Number, Sum = 0;
@@ -149,9 +201,9 @@ namespace NumericalIntegrationGUI {
 
     public class Simpson : Integral {
 
-        public Simpson (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { }
+        public Simpson (Func<Decimal, Decimal> X, Decimal L, Decimal U, Decimal N) : base(X, L, U, N) { Rule = "Simpson"; }
 
-        public Simpson (Integral I) : base(I) { }
+        public Simpson (Integral I) : base(I) { Rule = "Simpson"; }
 
         protected override Decimal Calculate () {
 
