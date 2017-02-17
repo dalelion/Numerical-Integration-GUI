@@ -1,13 +1,21 @@
-# Numerical-Integration-GUI | <span font-size="13px">Project for Calculus II Class</span>
+<h1 font-size="24px"><b>Numerical Integration GUI</b> | Project for Calculus II Class</h1>
 
-####The porpose of this project is to compare the different methods of integration based on their efficiency.
-	Each rule is fairly accurate and become more accurate when using more rectangles.
-	
-	The Midpoint Rule is about twice as accurate as the Trapezoid Rule.
-	
-	The Simpson Rule combines the two methods to make it almost exact.
+#Documentation
+##Overview
+<p font-size="16px">This project is a <b>Numberical Integration Calculator</b> for the function <code>(8x^2 - x^5)</code>.</p>
+<p font-size="16px">Currently the user can enter a <em>Lower Bound, Upper Bound</em> and <em>Number of Rectangles</em> to calculate integrals<br /> using three different rules; <em>Midpoint, Trapezoid and Simpson.</em> You can also calculate the Actual value</p>
+##Future Plans
+<p font-size="16px">The next planned feature is to be able to enter custom functions instead of having a hard-coded function.</p>
+<p font-size="16px">This will require Expression parsing and the ability to take the integral of a function through code.</p>
+
 
 #Comparing Results
+####The purpose of this project is to compare the different methods of integration based on their efficiency.
+<ul>
+	<li>Each rule is fairly accurate and become more accurate when using more rectangles.<br /><br /></li>
+	<li>The Midpoint Rule is about twice as accurate as the Trapezoid Rule.<br /><br /></li>
+	<li>The Simpson Rule combines the two methods to make it almost exact.<br /><br /></li>
+</ul>
 ##Actual Integral | F(x) = 8x^2 - x^5
 	Result="10.666666666666666666666666667"
 ##Inputs
