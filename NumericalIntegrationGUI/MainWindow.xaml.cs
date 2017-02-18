@@ -2,8 +2,8 @@
 using System.Text;
 using System.Windows;
 using System.Xml;
-using System.Linq.Expressions;
-using System.Linq.Dynamic;
+//using System.Linq.Expressions;
+//using System.Linq.Dynamic;
 using System.ComponentModel;
 using System.Collections.Generic;
 
@@ -61,6 +61,8 @@ namespace NumericalIntegrationGUI {
 
             //TODO: Make methods able to parse strings to code (System.Linq.Expressions)
             String Function = InputFunction.Text;
+
+            InputFunction.Text = "Not yet implemented";
 
         }
 
@@ -190,11 +192,11 @@ namespace NumericalIntegrationGUI {
         protected override Decimal Calculate () {
             Decimal DeltaX = (UpperLimit - LowerLimit) / Number, Sum = 0;
 
-            for (Decimal i = LowerLimit; i <= UpperLimit; i += DeltaX) {
-                Sum += 2 * F(i);
+            for (Decimal i = 0; i <= Number; ++i) {
+                Sum += i == 0 || i == Number ? i == 0 ? F(LowerLimit) : F(UpperLimit) : 2 * F(LowerLimit + i * DeltaX);
             }
-            return (DeltaX / 2) * Sum;
 
+            return .5m * DeltaX * Sum;
         }
 
     }
